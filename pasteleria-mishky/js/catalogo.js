@@ -24,7 +24,6 @@ const btnCerrarModal = modal.querySelector(".modal__cerrar");
 
 // --- Estado de la aplicación ------------------------------------------------
 let productos = [];
-// Reto 3 · Recordar la categoría en la URL (ej. catalogo.html#Tortas)
 let categoriaActiva = decodeURIComponent(location.hash.slice(1)) || TODAS;
 let textoBusqueda = "";
 let ordenActual = "defecto";
@@ -53,7 +52,6 @@ async function cargarProductos() {
 
 // --- 2. Generar los botones de filtro ---------------------------------------
 function obtenerCategorias(lista) {
-  // Set elimina repetidos y conserva el orden de aparición
   return [TODAS, ...new Set(lista.map((p) => p.categoria))];
 }
 
@@ -83,13 +81,14 @@ function renderizarFiltros(categorias) {
 function crearTarjeta(p) {
   const nodo = plantilla.content.cloneNode(true);
   const tarjeta = nodo.querySelector(".tarjeta");
+  const cuerpo = nodo.querySelector(".tarjeta__cuerpo");
   const img = nodo.querySelector("img");
   const etiqueta = nodo.querySelector(".etiqueta");
 
   img.src = p.imagen;
   img.alt = p.nombre;
   img.onerror = () => {
-    img.onerror = null; // evita un bucle si también falta la imagen de respaldo
+    img.onerror = null;
     img.src = "img/sin-imagen.jpg";
   };
 
@@ -111,30 +110,43 @@ function crearTarjeta(p) {
     etiqueta.hidden = false;
   }
 
+  // Botón integrado para agregar al carrito
+  const btnAgregar = document.createElement("button");
+  btnAgregar.type = "button";
+  btnAgregar.className = "mishky-add-btn";
+  btnAgregar.textContent = p.stock === 0 ? "Sin stock" : "Agregar al pedido";
+  btnAgregar.disabled = p.stock === 0;
+
+  btnAgregar.addEventListener("click", () => {
+    agregarProductoMishky(p.nombre, p.precio);
+    btnAgregar.textContent = "✓ Agregado";
+    setTimeout(() => {
+      btnAgregar.textContent = "Agregar al pedido";
+    }, 900);
+  });
+
+  cuerpo.appendChild(btnAgregar);
+
   return nodo;
 }
 
 // --- 4. Renderizar la lista filtrada y ordenada -----------------------------
 function renderizarCatalogo() {
-  // Filtro base por categoría
   let filtrados =
     categoriaActiva === TODAS
       ? productos
       : productos.filter((p) => p.categoria === categoriaActiva);
 
-  // Reto 2 · Buscador por nombre combinado con la categoría activa
   if (textoBusqueda !== "") {
     filtrados = filtrados.filter((p) =>
       p.nombre.toLowerCase().includes(textoBusqueda)
     );
   }
 
-  // Reto 4 · Solo disponibles (oculta productos con stock 0)
   if (soloDisponibles) {
     filtrados = filtrados.filter((p) => p.stock > 0);
   }
 
-  // Reto 1 · Ordenar por precio con sort() antes de renderizar
   const lista =
     ordenActual === "defecto"
       ? filtrados
@@ -167,9 +179,7 @@ contFiltros.addEventListener("click", (evento) => {
     b.setAttribute("aria-pressed", String(b === boton));
   });
 
-  // Reto 3 · Actualizar la URL sin recargar la página
   history.replaceState(null, "", "#" + encodeURIComponent(categoriaActiva));
-
   renderizarCatalogo();
 });
 
@@ -244,9 +254,143 @@ modal.addEventListener("click", (evento) => {
   if (evento.target === modal) modal.close();
 });
 
-// --- 7. Inicio --------------------------------------------------------------
+// --- 7. Carrito de Pedidos --------------------------------------------------
+let carritoMishky = JSON.parse(localStorage.getItem("mishky_carrito")) || [];
+
+const cartOverlay = document.getElementById("mishky-cart-overlay");
+const cartItemsContainer = document.getElementById("mishky-cart-items");
+const cartCountBadge = document.getElementById("mishky-cart-count");
+const cartTotalEl = document.getElementById("mishky-cart-total");
+
+function guardarYRenderizarCarrito() {
+  localStorage.setItem("mishky_carrito", JSON.stringify(carritoMishky));
+  const totalUnidades = carritoMishky.reduce((acc, item) => acc + item.cantidad, 0);
+  const totalPrecio = carritoMishky.reduce(
+    (acc, item) => acc + item.precio * item.cantidad,
+    0
+  );
+
+  if (cartCountBadge) cartCountBadge.textContent = totalUnidades;
+  if (cartTotalEl) cartTotalEl.textContent = soles.format(totalPrecio);
+
+  if (!cartItemsContainer) return;
+
+  if (carritoMishky.length === 0) {
+    cartItemsContainer.innerHTML =
+      '<p style="text-align:center;color:#7a6f68;margin-top:30px;">Tu carrito está vacío.</p>';
+    return;
+  }
+
+  cartItemsContainer.innerHTML = carritoMishky
+    .map(
+      (item, idx) => `
+      <div class="mishky-cart-item">
+        <div>
+          <strong>${item.nombre}</strong>
+          <div style="font-size:13px;color:#7a6f68;">${soles.format(item.precio)} c/u</div>
+        </div>
+        <div class="mishky-qty-controls">
+          <button type="button" onclick="cambiarCantidadMishky(${idx}, -1)">-</button>
+          <span style="margin:0 6px;">${item.cantidad}</span>
+          <button type="button" onclick="cambiarCantidadMishky(${idx}, 1)">+</button>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+window.cambiarCantidadMishky = (index, delta) => {
+  carritoMishky[index].cantidad += delta;
+  if (carritoMishky[index].cantidad <= 0) carritoMishky.splice(index, 1);
+  guardarYRenderizarCarrito();
+};
+
+function agregarProductoMishky(nombre, precio) {
+  const existente = carritoMishky.find((p) => p.nombre === nombre);
+  if (existente) {
+    existente.cantidad += 1;
+  } else {
+    carritoMishky.push({ nombre, precio, cantidad: 1 });
+  }
+  guardarYRenderizarCarrito();
+}
+
+document.getElementById("mishky-cart-toggle")?.addEventListener("click", () => {
+  cartOverlay?.classList.add("activo");
+});
+
+document.getElementById("mishky-cart-close")?.addEventListener("click", () => {
+  cartOverlay?.classList.remove("activo");
+});
+
+cartOverlay?.addEventListener("click", (e) => {
+  if (e.target === cartOverlay) cartOverlay.classList.remove("activo");
+});
+
+document.getElementById("mishky-cart-clear")?.addEventListener("click", () => {
+  carritoMishky = [];
+  guardarYRenderizarCarrito();
+});
+
+document.getElementById("mishky-cart-confirm")?.addEventListener("click", () => {
+  if (carritoMishky.length === 0) {
+    alert("Agrega al menos un producto antes de confirmar.");
+    return;
+  }
+  alert("¡Gracias por tu pedido en Pastelería Mishky! Nos pondremos en contacto contigo.");
+  carritoMishky = [];
+  guardarYRenderizarCarrito();
+  cartOverlay?.classList.remove("activo");
+});
+
+// --- 8. Modal de Contacto ---------------------------------------------------
+(() => {
+  const contactModal = document.getElementById("mishky-contact-modal");
+  const contactForm = document.getElementById("mishky-contact-form");
+  const contactFeedback = document.getElementById("mishky-contact-feedback");
+
+  document.querySelectorAll('a[href="#contacto"]').forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (contactFeedback) contactFeedback.textContent = "";
+      contactModal?.classList.add("activo");
+    });
+  });
+
+  document.getElementById("mishky-contact-close")?.addEventListener("click", () => {
+    contactModal?.classList.remove("activo");
+  });
+
+  contactModal?.addEventListener("click", (e) => {
+    if (e.target === contactModal) contactModal.classList.remove("activo");
+  });
+
+  contactForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const nombre = document.getElementById("mishky-c-nombre").value.trim();
+    const email = document.getElementById("mishky-c-email").value.trim();
+    const mensaje = document.getElementById("mishky-c-mensaje").value.trim();
+
+    if (!nombre || !email.includes("@") || !mensaje) {
+      contactFeedback.style.color = "#b3261e";
+      contactFeedback.textContent =
+        "Por favor completa tu nombre, un correo válido y tu mensaje.";
+      return;
+    }
+
+    contactFeedback.style.color = "#2e7d32";
+    contactFeedback.textContent = `¡Gracias, ${nombre}! Recibimos tu solicitud y te responderemos pronto.`;
+    contactForm.reset();
+    setTimeout(() => contactModal?.classList.remove("activo"), 1800);
+  });
+})();
+
+// --- 9. Inicio --------------------------------------------------------------
 async function iniciar() {
   estado.textContent = "Cargando productos...";
+  guardarYRenderizarCarrito();
+
   try {
     productos = await cargarProductos();
     const categorias = obtenerCategorias(productos);
@@ -268,41 +412,3 @@ async function iniciar() {
 }
 
 iniciar();
-
-// === LÓGICA DEL MODAL DE CONTACTO ===
-(() => {
-  const modal = document.getElementById('mishky-contact-modal');
-  const form = document.getElementById('mishky-contact-form');
-  const feedback = document.getElementById('mishky-contact-feedback');
-
-  document.querySelectorAll('a').forEach(link => {
-    if (link.textContent.trim().toLowerCase() === 'contacto' || link.getAttribute('href')?.includes('contacto')) {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        feedback.textContent = '';
-        modal.classList.add('activo');
-      });
-    }
-  });
-
-  document.getElementById('mishky-contact-close')?.addEventListener('click', () => modal.classList.remove('activo'));
-  modal?.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('activo'); });
-
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const nombre = document.getElementById('mishky-c-nombre').value.trim();
-    const email = document.getElementById('mishky-c-email').value.trim();
-    const mensaje = document.getElementById('mishky-c-mensaje').value.trim();
-
-    if (!nombre || !email.includes('@') || !mensaje) {
-      feedback.style.color = '#b3261e';
-      feedback.textContent = 'Por favor completa tu nombre, un correo válido y tu mensaje.';
-      return;
-    }
-
-    feedback.style.color = '#2e7d32';
-    feedback.textContent = `¡Gracias, ${nombre}! Recibimos tu solicitud y te responderemos pronto.`;
-    form.reset();
-    setTimeout(() => modal.classList.remove('activo'), 1800);
-  });
-})();
