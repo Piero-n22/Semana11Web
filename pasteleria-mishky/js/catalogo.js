@@ -268,3 +268,41 @@ async function iniciar() {
 }
 
 iniciar();
+
+// === LÓGICA DEL MODAL DE CONTACTO ===
+(() => {
+  const modal = document.getElementById('mishky-contact-modal');
+  const form = document.getElementById('mishky-contact-form');
+  const feedback = document.getElementById('mishky-contact-feedback');
+
+  document.querySelectorAll('a').forEach(link => {
+    if (link.textContent.trim().toLowerCase() === 'contacto' || link.getAttribute('href')?.includes('contacto')) {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        feedback.textContent = '';
+        modal.classList.add('activo');
+      });
+    }
+  });
+
+  document.getElementById('mishky-contact-close')?.addEventListener('click', () => modal.classList.remove('activo'));
+  modal?.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('activo'); });
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nombre = document.getElementById('mishky-c-nombre').value.trim();
+    const email = document.getElementById('mishky-c-email').value.trim();
+    const mensaje = document.getElementById('mishky-c-mensaje').value.trim();
+
+    if (!nombre || !email.includes('@') || !mensaje) {
+      feedback.style.color = '#b3261e';
+      feedback.textContent = 'Por favor completa tu nombre, un correo válido y tu mensaje.';
+      return;
+    }
+
+    feedback.style.color = '#2e7d32';
+    feedback.textContent = `¡Gracias, ${nombre}! Recibimos tu solicitud y te responderemos pronto.`;
+    form.reset();
+    setTimeout(() => modal.classList.remove('activo'), 1800);
+  });
+})();
