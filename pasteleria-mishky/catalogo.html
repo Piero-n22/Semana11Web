@@ -147,5 +147,28 @@
     </dialog>
 
     <script src="js/catalogo.js" defer></script>
+    <!-- Botón flotante del carrito -->
+<button id="mishky-cart-toggle" class="mishky-cart-fab" aria-label="Abrir carrito">
+  🛒 <span id="mishky-cart-count">0</span>
+</button>
+
+<!-- Panel lateral del carrito -->
+<div id="mishky-cart-overlay" class="mishky-overlay">
+  <aside class="mishky-drawer">
+    <div class="mishky-drawer-header">
+      <h3>Tu pedido</h3>
+      <button id="mishky-cart-close" class="mishky-close-btn">&times;</button>
+    </div>
+    <div id="mishky-cart-items" class="mishky-drawer-body"></div>
+    <div class="mishky-drawer-footer">
+      <div class="mishky-total-row">
+        <span>Total estimado:</span>
+        <strong id="mishky-cart-total">S/ 0.00</strong>
+      </div>
+      <button id="mishky-cart-confirm" class="mishky-btn-primary">Confirmar pedido</button>
+      <button id="mishky-cart-clear" class="mishky-btn-secondary">Vaciar carrito</button>
+    </div>
+  </aside>
+</div>
   </body>
 </html>
