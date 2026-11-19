@@ -92,7 +92,7 @@
       </div>
     </footer>
 
-    <!-- Plantilla de una tarjeta de producto: el navegador no la muestra -->
+    <!-- Plantilla de una tarjeta de producto -->
     <template id="tpl-producto">
       <li class="tarjeta">
         <figure class="tarjeta__foto">
@@ -146,29 +146,55 @@
       </article>
     </dialog>
 
-    <script src="js/catalogo.js" defer></script>
     <!-- Botón flotante del carrito -->
-<button id="mishky-cart-toggle" class="mishky-cart-fab" aria-label="Abrir carrito">
-  🛒 <span id="mishky-cart-count">0</span>
-</button>
+    <button id="mishky-cart-toggle" class="mishky-cart-fab" aria-label="Abrir carrito">
+      🛒 <span id="mishky-cart-count">0</span>
+    </button>
 
-<!-- Panel lateral del carrito -->
-<div id="mishky-cart-overlay" class="mishky-overlay">
-  <aside class="mishky-drawer">
-    <div class="mishky-drawer-header">
-      <h3>Tu pedido</h3>
-      <button id="mishky-cart-close" class="mishky-close-btn">&times;</button>
+    <!-- Panel lateral del carrito -->
+    <div id="mishky-cart-overlay" class="mishky-overlay">
+      <aside class="mishky-drawer">
+        <div class="mishky-drawer-header">
+          <h3>Tu pedido</h3>
+          <button id="mishky-cart-close" class="mishky-close-btn">&times;</button>
+        </div>
+        <div id="mishky-cart-items" class="mishky-drawer-body"></div>
+        <div class="mishky-drawer-footer">
+          <div class="mishky-total-row">
+            <span>Total estimado:</span>
+            <strong id="mishky-cart-total">S/ 0.00</strong>
+          </div>
+          <button id="mishky-cart-confirm" class="mishky-btn-primary">Confirmar pedido</button>
+          <button id="mishky-cart-clear" class="mishky-btn-secondary">Vaciar carrito</button>
+        </div>
+      </aside>
     </div>
-    <div id="mishky-cart-items" class="mishky-drawer-body"></div>
-    <div class="mishky-drawer-footer">
-      <div class="mishky-total-row">
-        <span>Total estimado:</span>
-        <strong id="mishky-cart-total">S/ 0.00</strong>
+
+    <!-- Modal de Contacto -->
+    <div id="mishky-contact-modal" class="mishky-overlay" style="justify-content:center;align-items:center;">
+      <div class="mishky-contact-box">
+        <div class="mishky-drawer-header">
+          <h3>Contáctanos — Pastelería Mishky</h3>
+          <button id="mishky-contact-close" class="mishky-close-btn">&times;</button>
+        </div>
+        <p style="font-size:14px;color:#6b5e55;margin:10px 0 14px;">
+          📍 Av. El Sol 845, Cusco &nbsp;|&nbsp; 🕒 Lun - Sáb: 8:00 a.m. - 8:00 p.m.
+        </p>
+        <form id="mishky-contact-form" novalidate>
+          <input type="text" id="mishky-c-nombre" class="mishky-input" placeholder="Tu nombre completo" required>
+          <input type="email" id="mishky-c-email" class="mishky-input" placeholder="Correo electrónico" required>
+          <select id="mishky-c-motivo" class="mishky-input">
+            <option value="Torta personalizada">Pedido de torta personalizada</option>
+            <option value="Eventos">Bocaditos para eventos</option>
+            <option value="Consulta">Consulta sobre envíos en Cusco</option>
+          </select>
+          <textarea id="mishky-c-mensaje" class="mishky-input" rows="3" placeholder="Cuéntanos qué deseas pedir..." required></textarea>
+          <div id="mishky-contact-feedback" style="font-size:13px;margin-bottom:8px;"></div>
+          <button type="submit" class="mishky-btn-primary">Enviar mensaje</button>
+        </form>
       </div>
-      <button id="mishky-cart-confirm" class="mishky-btn-primary">Confirmar pedido</button>
-      <button id="mishky-cart-clear" class="mishky-btn-secondary">Vaciar carrito</button>
     </div>
-  </aside>
-</div>
+
+    <script src="js/catalogo.js" defer></script>
   </body>
 </html>
