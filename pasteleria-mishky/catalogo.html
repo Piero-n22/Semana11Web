@@ -151,7 +151,7 @@
       🛒 <span id="mishky-cart-count">0</span>
     </button>
 
-    <!-- Panel lateral del carrito -->
+    <!-- Panel lateral del carrito con cupón -->
     <div id="mishky-cart-overlay" class="mishky-overlay">
       <aside class="mishky-drawer">
         <div class="mishky-drawer-header">
@@ -160,18 +160,101 @@
         </div>
         <div id="mishky-cart-items" class="mishky-drawer-body"></div>
         <div class="mishky-drawer-footer">
-          <div class="mishky-total-row">
+          <div class="mishky-coupon-box">
+            <input
+              type="text"
+              id="mishky-coupon-input"
+              class="mishky-input"
+              style="margin-bottom:0;"
+              placeholder="Cupón (ej. MISHKY10)"
+            />
+            <button type="button" id="mishky-coupon-apply" class="mishky-btn-small">
+              Aplicar
+            </button>
+          </div>
+          <div id="mishky-coupon-msg" style="font-size:12px;margin:4px 0 8px;"></div>
+
+          <div class="mishky-total-row" style="font-size:14px;color:var(--gris);">
+            <span>Subtotal:</span>
+            <span id="mishky-cart-subtotal">S/ 0.00</span>
+          </div>
+          <div
+            id="mishky-discount-row"
+            class="mishky-total-row"
+            style="font-size:14px;color:#2e7d32;display:none;"
+          >
+            <span>Descuento aplicado:</span>
+            <span id="mishky-cart-discount">- S/ 0.00</span>
+          </div>
+          <div class="mishky-total-row" style="margin-top:6px;">
             <span>Total estimado:</span>
             <strong id="mishky-cart-total">S/ 0.00</strong>
           </div>
-          <button id="mishky-cart-confirm" class="mishky-btn-primary">Confirmar pedido</button>
-          <button id="mishky-cart-clear" class="mishky-btn-secondary">Vaciar carrito</button>
+          <button id="mishky-cart-confirm" class="mishky-btn-primary">
+            Confirmar pedido
+          </button>
+          <button id="mishky-cart-clear" class="mishky-btn-secondary">
+            Vaciar carrito
+          </button>
         </div>
       </aside>
     </div>
 
+    <!-- Modal de Comprobante de Orden -->
+    <div
+      id="mishky-receipt-modal"
+      class="mishky-overlay"
+      style="justify-content:center;align-items:center;"
+    >
+      <div class="mishky-contact-box" style="max-width:420px;">
+        <div class="mishky-drawer-header">
+          <h3>Orden registrada</h3>
+          <button id="mishky-receipt-close" class="mishky-close-btn">&times;</button>
+        </div>
+        <div style="text-align:center;margin:12px 0;">
+          <span class="mishky-order-badge" id="mishky-order-code">#MSK-0000</span>
+          <p style="font-size:13px;color:var(--gris);margin:6px 0 0;">
+            Presenta este código al recoger o recibir tu pedido.
+          </p>
+        </div>
+
+        <label style="font-size:13px;font-weight:700;display:block;margin-bottom:4px;">
+          Modalidad de entrega:
+        </label>
+        <select id="mishky-delivery-mode" class="mishky-input">
+          <option value="Recojo en tienda (Av. El Sol 845, Cusco)">
+            Recojo en tienda (Av. El Sol 845, Cusco)
+          </option>
+          <option value="Delivery local en Cusco">Delivery local en Cusco</option>
+        </select>
+
+        <div id="mishky-receipt-list" class="mishky-receipt-items"></div>
+
+        <div
+          class="mishky-total-row"
+          style="border-top:1px dashed var(--crema-2);padding-top:10px;margin-top:8px;"
+        >
+          <span>Total a pagar:</span>
+          <strong id="mishky-receipt-total" style="font-size:1.2rem;">S/ 0.00</strong>
+        </div>
+
+        <button
+          type="button"
+          id="mishky-receipt-done"
+          class="mishky-btn-primary"
+          style="margin-top:14px;"
+        >
+          Finalizar pedido
+        </button>
+      </div>
+    </div>
+
     <!-- Modal de Contacto -->
-    <div id="mishky-contact-modal" class="mishky-overlay" style="justify-content:center;align-items:center;">
+    <div
+      id="mishky-contact-modal"
+      class="mishky-overlay"
+      style="justify-content:center;align-items:center;"
+    >
       <div class="mishky-contact-box">
         <div class="mishky-drawer-header">
           <h3>Contáctanos — Pastelería Mishky</h3>
@@ -181,14 +264,32 @@
           📍 Av. El Sol 845, Cusco &nbsp;|&nbsp; 🕒 Lun - Sáb: 8:00 a.m. - 8:00 p.m.
         </p>
         <form id="mishky-contact-form" novalidate>
-          <input type="text" id="mishky-c-nombre" class="mishky-input" placeholder="Tu nombre completo" required>
-          <input type="email" id="mishky-c-email" class="mishky-input" placeholder="Correo electrónico" required>
+          <input
+            type="text"
+            id="mishky-c-nombre"
+            class="mishky-input"
+            placeholder="Tu nombre completo"
+            required
+          />
+          <input
+            type="email"
+            id="mishky-c-email"
+            class="mishky-input"
+            placeholder="Correo electrónico"
+            required
+          />
           <select id="mishky-c-motivo" class="mishky-input">
             <option value="Torta personalizada">Pedido de torta personalizada</option>
             <option value="Eventos">Bocaditos para eventos</option>
             <option value="Consulta">Consulta sobre envíos en Cusco</option>
           </select>
-          <textarea id="mishky-c-mensaje" class="mishky-input" rows="3" placeholder="Cuéntanos qué deseas pedir..." required></textarea>
+          <textarea
+            id="mishky-c-mensaje"
+            class="mishky-input"
+            rows="3"
+            placeholder="Cuéntanos qué deseas pedir..."
+            required
+          ></textarea>
           <div id="mishky-contact-feedback" style="font-size:13px;margin-bottom:8px;"></div>
           <button type="submit" class="mishky-btn-primary">Enviar mensaje</button>
         </form>
