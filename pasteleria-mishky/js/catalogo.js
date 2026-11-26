@@ -254,24 +254,57 @@ modal.addEventListener("click", (evento) => {
   if (evento.target === modal) modal.close();
 });
 
-// --- 7. Carrito de Pedidos --------------------------------------------------
+// --- 7. Carrito de Pedidos, Cupón y Comprobante ------------------------------
 let carritoMishky = JSON.parse(localStorage.getItem("mishky_carrito")) || [];
+let descuentoPorcentaje = 0;
+
+const CUPONES_VALIDOS = {
+  MISHKY10: 0.10,
+  CUSCO15: 0.15,
+};
 
 const cartOverlay = document.getElementById("mishky-cart-overlay");
 const cartItemsContainer = document.getElementById("mishky-cart-items");
 const cartCountBadge = document.getElementById("mishky-cart-count");
+const cartSubtotalEl = document.getElementById("mishky-cart-subtotal");
+const cartDiscountRow = document.getElementById("mishky-discount-row");
+const cartDiscountEl = document.getElementById("mishky-cart-discount");
 const cartTotalEl = document.getElementById("mishky-cart-total");
+const couponInput = document.getElementById("mishky-coupon-input");
+const couponMsg = document.getElementById("mishky-coupon-msg");
+
+const receiptModal = document.getElementById("mishky-receipt-modal");
+const receiptCodeEl = document.getElementById("mishky-order-code");
+const receiptListEl = document.getElementById("mishky-receipt-list");
+const receiptTotalEl = document.getElementById("mishky-receipt-total");
+
+function calcularTotalesCarrito() {
+  const subtotal = carritoMishky.reduce(
+    (acc, item) => acc + item.precio * item.cantidad,
+    0
+  );
+  const descuento = subtotal * descuentoPorcentaje;
+  const total = subtotal - descuento;
+  return { subtotal, descuento, total };
+}
 
 function guardarYRenderizarCarrito() {
   localStorage.setItem("mishky_carrito", JSON.stringify(carritoMishky));
   const totalUnidades = carritoMishky.reduce((acc, item) => acc + item.cantidad, 0);
-  const totalPrecio = carritoMishky.reduce(
-    (acc, item) => acc + item.precio * item.cantidad,
-    0
-  );
+  const { subtotal, descuento, total } = calcularTotalesCarrito();
 
   if (cartCountBadge) cartCountBadge.textContent = totalUnidades;
-  if (cartTotalEl) cartTotalEl.textContent = soles.format(totalPrecio);
+  if (cartSubtotalEl) cartSubtotalEl.textContent = soles.format(subtotal);
+  if (cartTotalEl) cartTotalEl.textContent = soles.format(total);
+
+  if (cartDiscountRow && cartDiscountEl) {
+    if (descuentoPorcentaje > 0 && subtotal > 0) {
+      cartDiscountRow.style.display = "flex";
+      cartDiscountEl.textContent = `- ${soles.format(descuento)}`;
+    } else {
+      cartDiscountRow.style.display = "none";
+    }
+  }
 
   if (!cartItemsContainer) return;
 
@@ -316,6 +349,20 @@ function agregarProductoMishky(nombre, precio) {
   guardarYRenderizarCarrito();
 }
 
+document.getElementById("mishky-coupon-apply")?.addEventListener("click", () => {
+  const codigo = couponInput.value.trim().toUpperCase();
+  if (CUPONES_VALIDOS[codigo]) {
+    descuentoPorcentaje = CUPONES_VALIDOS[codigo];
+    couponMsg.style.color = "#2e7d32";
+    couponMsg.textContent = `Cupón ${codigo} aplicado (${descuentoPorcentaje * 100}% de descuento).`;
+  } else {
+    descuentoPorcentaje = 0;
+    couponMsg.style.color = "#b3261e";
+    couponMsg.textContent = "Cupón no válido. Prueba con MISHKY10 o CUSCO15.";
+  }
+  guardarYRenderizarCarrito();
+});
+
 document.getElementById("mishky-cart-toggle")?.addEventListener("click", () => {
   cartOverlay?.classList.add("activo");
 });
@@ -330,18 +377,53 @@ cartOverlay?.addEventListener("click", (e) => {
 
 document.getElementById("mishky-cart-clear")?.addEventListener("click", () => {
   carritoMishky = [];
+  descuentoPorcentaje = 0;
+  if (couponInput) couponInput.value = "";
+  if (couponMsg) couponMsg.textContent = "";
   guardarYRenderizarCarrito();
 });
 
 document.getElementById("mishky-cart-confirm")?.addEventListener("click", () => {
   if (carritoMishky.length === 0) {
-    alert("Agrega al menos un producto antes de confirmar.");
+    if (couponMsg) {
+      couponMsg.style.color = "#b3261e";
+      couponMsg.textContent = "Agrega al menos un producto antes de confirmar.";
+    }
     return;
   }
-  alert("¡Gracias por tu pedido en Pastelería Mishky! Nos pondremos en contacto contigo.");
-  carritoMishky = [];
-  guardarYRenderizarCarrito();
+
+  const { total } = calcularTotalesCarrito();
+  const numeroOrden = Math.floor(1000 + Math.random() * 9000);
+
+  receiptCodeEl.textContent = `#MSK-${numeroOrden}`;
+  receiptTotalEl.textContent = soles.format(total);
+  receiptListEl.innerHTML = carritoMishky
+    .map(
+      (item) => `
+      <div class="mishky-receipt-line">
+        <span>${item.cantidad}x ${item.nombre}</span>
+        <strong>${soles.format(item.precio * item.cantidad)}</strong>
+      </div>
+    `
+    )
+    .join("");
+
   cartOverlay?.classList.remove("activo");
+  receiptModal?.classList.add("activo");
+});
+
+const cerrarYLimpiarOrden = () => {
+  carritoMishky = [];
+  descuentoPorcentaje = 0;
+  if (couponInput) couponInput.value = "";
+  if (couponMsg) couponMsg.textContent = "";
+  guardarYRenderizarCarrito();
+  receiptModal?.classList.remove("activo");
+};
+
+document.getElementById("mishky-receipt-done")?.addEventListener("click", cerrarYLimpiarOrden);
+document.getElementById("mishky-receipt-close")?.addEventListener("click", () => {
+  receiptModal?.classList.remove("activo");
 });
 
 // --- 8. Modal de Contacto ---------------------------------------------------
